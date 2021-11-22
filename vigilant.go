@@ -109,6 +109,7 @@ func main() {
 		if r.Method == "POST" {
 			fmt.Println("--- Handle POST ---")
 			body, err := ioutil.ReadAll(r.Body)
+			defer r.Body.Close()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -135,10 +136,9 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8801", nil))
 }
 
-func GetPostJson(body) Alert {
+func GetPostJson(bodyBytes []byte) Alert {
 	alertJson := Alert{}
-	defer r.Body.Close()
-	err2 := json.Unmarshal([]byte(body), &alert)
+	err2 := json.Unmarshal([]byte(bodyBytes), &alertJson)
 	if err2 != nil {
 		fmt.Println(err2)
 	}
