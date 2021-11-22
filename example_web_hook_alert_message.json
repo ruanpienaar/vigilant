@@ -1,0 +1,40 @@
+{
+  "receiver": "web\\.hook",
+  "status": "resolved",
+  "alerts": [
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "uptime_low",
+        "instance": "localhost:8099",
+        "job": "local_app",
+        "severity": "warning",
+        "type": "up_time"
+      },
+      "annotations": {
+        "summary": "Application uptime low"
+      },
+      "startsAt": "2021-11-22T22:39:21.245939463Z",
+      "endsAt": "2021-11-22T22:40:51.245939463Z",
+      "generatorURL": "http://rpmbp.local:9090/graph?g0.expr=beam_up_time+%3E+1\\u0026g0.tab=1",
+      "fingerprint": "8009035229a59d05"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "uptime_low"
+  },
+  "commonLabels": {
+    "alertname": "uptime_low",
+    "instance": "localhost:8099",
+    "job": "local_app",
+    "severity": "warning",
+    "type": "up_time"
+  },
+  "commonAnnotations": {
+    "summary": "Application uptime low"
+  },
+  "externalURL": "http://rpmbp.local:9093",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"uptime_low\"}",
+  "truncatedAlerts": 0
+}
