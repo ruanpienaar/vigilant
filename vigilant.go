@@ -1,4 +1,4 @@
-package main
+package Vigilant
 
 import (
 	"encoding/json"
@@ -10,44 +10,54 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+	"github.com/prometheus/alertmanager/template"
 )
 
-type Alert struct {
-	Receiver string `json:"receiver"`
-	Status   string `json:"status"`
-	Alerts   []struct {
-		Status string `json:"status"`
-		Labels struct {
-			AlertName string `json:"alertname"`
-			Instance  string `json:"instance"`
-			Job       string `json:"job"`
-			Severity  string `json:"severity"`
-			Type      string `json:"type"`
-		} `json:"labels"`
-		Annotations struct {
-			Summary string `json:"summary"`
-		} `json:"annotations"`
-		StartsAt     string    `json:"startsAt"`
-		EndsAt       time.Time `json:"endsAt"`
-		GeneratorURL string    `json:"generatorURL"`
-		Fingerprint  string    `json:"fingerprint"`
-	} `json:"alerts"`
-	GroupLabels struct {
-		AlertName string `json:"alertname"`
-	} `json:"groupLabels"`
-	CommonLabels struct {
-		AlertName string `json:"alertname"`
-		Service   string `json:"service"`
-		Severity  string `json:"severity"`
-	} `json:"commonLabels"`
-	CommonAnnotations struct {
-		Summary string `json:"summary"`
-	} `json:"commonAnnotations"`
-	ExternalURL string `json:"externalURL"`
-	Version     string `json:"version"`
-	GroupKey    string `json:"groupKey"`
-}
+//type AlertLabels struct {
+//	AlertName string `json:"alertname"`
+//	Instance  string `json:"instance"`
+//	Job       string `json:"job"`
+//	Severity  string `json:"severity"`
+//	Type      string `json:"type"`
+//}
+//
+//type AlertAnnotations struct {
+//	Summary string `json:"summary"`
+//}
+//
+//type Alert struct {
+//		Status string `json:"status"`
+//		Labels AlertLabels `json:"labels"`
+//		Annotations AlertAnnotations `json:"annotations"`
+//		StartsAt     time.Time `json:"startsAt"`
+//		EndsAt       time.Time `json:"endsAt"`
+//		GeneratorURL string    `json:"generatorURL"`
+//		Fingerprint  string    `json:"fingerprint"`
+//}
+//
+//type GroupLabels struct {
+//	AlertName string `json:"alertname"`
+//}
+//
+//type CommonLabels struct {
+//	AlertName string `json:"alertname"`
+//	Service   string `json:"service"`
+//	Severity  string `json:"severity"`
+//}
+//
+//type CommonAnnotations struct {
+//	Summary string `json:"summary"`
+//}
+//
+//type AlertMsg struct {
+//	Alerts   []Alert `json:"alerts"`
+//	GroupLabels GroupLabels `json:"groupLabels"`
+//	CommonLabels CommonLabels `json:"commonLabels"`
+//	CommonAnnotations CommonAnnotations `json:"commonAnnotations"`
+//	ExternalURL string `json:"externalURL"`
+//	Version     string `json:"version"`
+//	GroupKey    string `json:"groupKey"`
+//}
 
 func main() {
 
@@ -113,12 +123,15 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			alert := GetPostJson(body)
-			if alert.Status == "firing" {
-				for _, v := range alert.Alerts {
-					if v.Labels.Severity == "warning" {
-						fmt.Println("The service " + v.Labels.Job + " is broken")
-					}
+			alertJson := GetPostJson(body)
+			if alertJson.Status == "firing" {
+				for _, v := range alertJson.Alerts {
+					//if v.Labels.Severity == "warning" {
+					//	fmt.Println("The service " + v.Labels.Job + " is broken")
+					//}
+					//fmt.Fprintf("The service XXX status is %s", v.Status)
+					fmt.Println(v)
+
 				}
 			}
 		} else {
@@ -136,8 +149,8 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8801", nil))
 }
 
-func GetPostJson(bodyBytes []byte) Alert {
-	alertJson := Alert{}
+func GetPostJson(bodyBytes []byte) template.Data {
+	alertJson := template.Data{}
 	err2 := json.Unmarshal([]byte(bodyBytes), &alertJson)
 	if err2 != nil {
 		fmt.Println(err2)
