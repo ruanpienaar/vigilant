@@ -5,59 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/go-memdb"
+	"github.com/prometheus/alertmanager/template"
 	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"github.com/prometheus/alertmanager/template"
 )
-
-//type AlertLabels struct {
-//	AlertName string `json:"alertname"`
-//	Instance  string `json:"instance"`
-//	Job       string `json:"job"`
-//	Severity  string `json:"severity"`
-//	Type      string `json:"type"`
-//}
-//
-//type AlertAnnotations struct {
-//	Summary string `json:"summary"`
-//}
-//
-//type Alert struct {
-//		Status string `json:"status"`
-//		Labels AlertLabels `json:"labels"`
-//		Annotations AlertAnnotations `json:"annotations"`
-//		StartsAt     time.Time `json:"startsAt"`
-//		EndsAt       time.Time `json:"endsAt"`
-//		GeneratorURL string    `json:"generatorURL"`
-//		Fingerprint  string    `json:"fingerprint"`
-//}
-//
-//type GroupLabels struct {
-//	AlertName string `json:"alertname"`
-//}
-//
-//type CommonLabels struct {
-//	AlertName string `json:"alertname"`
-//	Service   string `json:"service"`
-//	Severity  string `json:"severity"`
-//}
-//
-//type CommonAnnotations struct {
-//	Summary string `json:"summary"`
-//}
-//
-//type AlertMsg struct {
-//	Alerts   []Alert `json:"alerts"`
-//	GroupLabels GroupLabels `json:"groupLabels"`
-//	CommonLabels CommonLabels `json:"commonLabels"`
-//	CommonAnnotations CommonAnnotations `json:"commonAnnotations"`
-//	ExternalURL string `json:"externalURL"`
-//	Version     string `json:"version"`
-//	GroupKey    string `json:"groupKey"`
-//}
 
 func main() {
 
