@@ -1,4 +1,4 @@
-package Vigilant_test
+package main_test
 
 import (
 	"github.com/prometheus/alertmanager/template"

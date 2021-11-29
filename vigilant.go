@@ -1,4 +1,4 @@
-package Vigilant
+package main
 
 import (
 	"encoding/json"
@@ -16,27 +16,54 @@ import (
 func main() {
 
 	// entry type
-	type Person struct {
-		Email string
-		Name  string
-		Age   int
+	//type Person struct {
+	//	Email string
+	//	Name  string
+	//	Age   int
+	//}
+
+	// entry Alert
+	type Alert struct {
+		Job string
+		Status string
 	}
 
+
 	// Create the DB schema
+	//schema := &memdb.DBSchema{
+	//	Tables: map[string]*memdb.TableSchema{
+	//		"person": &memdb.TableSchema{
+	//			Name: "person",
+	//			Indexes: map[string]*memdb.IndexSchema{
+	//				"id": &memdb.IndexSchema{
+	//					Name:    "id",
+	//					Unique:  true,
+	//					Indexer: &memdb.StringFieldIndex{Field: "Email"},
+	//				},
+	//				"age": &memdb.IndexSchema{
+	//					Name:    "age",
+	//					Unique:  false,
+	//					Indexer: &memdb.IntFieldIndex{Field: "Age"},
+	//				},
+	//			},
+	//		},
+	//	},
+	//}
+
 	schema := &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
-			"person": &memdb.TableSchema{
-				Name: "person",
+			"alert": &memdb.TableSchema{
+				Name: "alert",
 				Indexes: map[string]*memdb.IndexSchema{
 					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "Email"},
+						Name: "id",
+						Unique: true,
+						Indexer: &memdb.StringFieldIndex{Field: "Job"},
 					},
-					"age": &memdb.IndexSchema{
-						Name:    "age",
-						Unique:  false,
-						Indexer: &memdb.IntFieldIndex{Field: "Age"},
+					"status": &memdb.IndexSchema{
+						Name: "status",
+						Unique: false,
+						Indexer: &memdb.StringFieldIndex{Field: "Status"},
 					},
 				},
 			},
@@ -50,23 +77,20 @@ func main() {
 	}
 
 	// Create write transaction
-	txn := db.Txn(true)
+	//txn := db.Txn(true)
 
 	// Insert some people
-	people := []*Person{
-		&Person{"joe@aol.com", "Joe", 30},
-		&Person{"lucy@aol.com", "Lucy", 35},
-		&Person{"tariq@aol.com", "Tariq", 21},
-		&Person{"dorothy@aol.com", "Dorothy", 53},
-	}
-	for _, p := range people {
-		if err := txn.Insert("person", p); err != nil {
-			panic(err)
-		}
-	}
-
-	// Commit the transaction
-	txn.Commit()
+	//people := []*Person{
+	//	&Person{"joe@aol.com", "Joe", 30},
+	//	&Person{"lucy@aol.com", "Lucy", 35},
+	//	&Person{"tariq@aol.com", "Tariq", 21},
+	//	&Person{"dorothy@aol.com", "Dorothy", 53},
+	//}
+	//for _, p := range people {
+	//	if err := txn.Insert("person", p); err != nil {
+	//		panic(err)
+	//	}
+	//}
 
 	// web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -78,16 +102,27 @@ func main() {
 				fmt.Println(err)
 			}
 			alertJson := GetPostJson(body)
-			if alertJson.Status == "firing" {
+			txn := db.Txn(true)
+			//if alertJson.Status == "firing" {
 				for _, v := range alertJson.Alerts {
+					//fmt.Println(v)
+					// fmt.Println(v.Labels["job"])
+					// &Person{"joe@aol.com", "Joe", 30},
+					aaa := Alert{
+						Job: v.Labels["job"],
+						Status: v.Status,
+					}
+					if err := txn.Insert("alert", aaa); err != nil {
+						panic(err)
+					}
 					//if v.Labels.Severity == "warning" {
 					//	fmt.Println("The service " + v.Labels.Job + " is broken")
 					//}
 					//fmt.Fprintf("The service XXX status is %s", v.Status)
-					fmt.Println(v)
-
 				}
-			}
+				// Commit the transaction
+				txn.Commit()
+			//}
 		} else {
 			filepath := "www/" + r.URL.Path[1:]
 			_, err := os.Open(filepath)
