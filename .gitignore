@@ -15,3 +15,6 @@
 # vendor/
 
 vigilant
+node_modules
+
+www/bundle.js
