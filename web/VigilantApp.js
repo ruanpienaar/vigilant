@@ -1,30 +1,36 @@
 import React from 'react';
-
-import 'react-date-range/dist/styles.css'; // main style file
-import 'react-date-range/dist/theme/default.css'; // theme css file
-import { DateRangePicker } from 'react-date-range';
-
+import VigilantDatePicker from './VigilantDatePicker';
 export default class VigilantApp extends React.Component {
     state = {
-        timeFrame: '24h'
+        startDate: new Date(),
+        endDate: new Date()
     }
-    handleSelect(date){
-        console.log(date); // native Date object
+    showState = () => {
+        console.log(this.state);
+    }
+    handleSelect = (s) => {
+        // console.log(s); // native Date object
+        console.log( s.selection.startDate );
+        console.log( s.selection.endDate );
+        this.setState( () => (
+            {
+                startDate: s.selection.startDate,
+                endDate: s.selection.endDate
+            }
+        ) )
     }
     render(){
         const selectionRange = {
-            startDate: new Date(),
-            endDate: new Date(),
+            startDate: this.state.startDate,
+            endDate: this.state.endDate,
             key: 'selection',
-        }
+        };
         return (
             <div>
-                <p>Choose a daterage</p>
+                <h1>Vigilant</h1>
+                <button>Choose a daterage</button>
                 <div>
-                <DateRangePicker
-                    ranges={[selectionRange]}
-                    onChange={this.handleSelect}
-                />
+                    <VigilantDatePicker selectionRange={selectionRange} handleSelect={this.handleSelect} showState={this.showState} />
                 </div>
             </div>
         );
