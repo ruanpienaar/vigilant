@@ -13,4 +13,4 @@ export const VigilantDatePicker = (props) => {
         </div>
     );
 }
-export default VigilantDatePicker
+export default VigilantDatePicker;

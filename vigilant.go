@@ -16,13 +16,14 @@ import (
 
 // Alert used in db
 type Alert struct {
+	GeneratorURL string
 	Job string
 	Status string
 }
 
 // Json used for web api calls
-
 type AlertJson struct {
+	GeneratorURL string
 	Job string
 	Status string
 }
@@ -40,6 +41,11 @@ func main() {
 					"id": &memdb.IndexSchema{
 						Name: "id",
 						Unique: true,
+						Indexer: &memdb.StringFieldIndex{Field: "GeneratorURL"},
+					},
+					"job": &memdb.IndexSchema{
+						Name: "job",
+						Unique: false,
 						Indexer: &memdb.StringFieldIndex{Field: "Job"},
 					},
 					"status": &memdb.IndexSchema{
@@ -60,7 +66,7 @@ func main() {
 	// web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			//fmt.Println("--- Handle POST ---")
+			fmt.Println("--- Handle POST ---")
 			body, err := ioutil.ReadAll(r.Body)
 			defer r.Body.Close()
 			if err != nil {
@@ -70,11 +76,12 @@ func main() {
 			txn := db.Txn(true)
 			//if alertJson.Status == "firing" {
 				for _, v := range alertJson.Alerts {
-					aaa := Alert{
-						Job: v.Labels["job"],
-						Status: v.Status,
-					}
-					if err := txn.Insert("alert", aaa); err != nil {
+					fmt.Println(v);
+					//aaa := &Alert{v.Labels["job"], v.Status}
+					// TODO: get job?
+					aRec := &Alert{v.GeneratorURL, "job", v.Status}
+					fmt.Println(aRec)
+					if err := txn.Insert("alert", aRec); err != nil {
 						panic(err)
 					}
 					//if v.Labels.Severity == "warning" {
@@ -122,8 +129,9 @@ func HandleURICommand (db *memdb.MemDB, RequestURI string) []byte {
 		}
 		var responseJsonAlerts []AlertJson
 		for obj := it.Next(); obj != nil; obj = it.Next() {
-			DbAlert := obj.(Alert)
+			DbAlert := obj.(*Alert)
 			responseJsonAlerts = append(responseJsonAlerts, AlertJson{
+				GeneratorURL: DbAlert.GeneratorURL,
 				Job: DbAlert.Job,
 				Status: DbAlert.Status,
 			})
