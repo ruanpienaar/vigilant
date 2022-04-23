@@ -1,5 +1,5 @@
 import React from 'react';
 const VigilantAlert = (props) => (
-    <li>{props.alert.GeneratorURL}</li>
+    <li key={props.alert.GeneratorURL} >{props.alert.GeneratorURL}</li>
 );
 export default VigilantAlert;

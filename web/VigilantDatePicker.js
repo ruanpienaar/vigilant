@@ -7,7 +7,7 @@ export const VigilantDatePicker = (props) => {
         <div>
             <DateRangePicker
                 ranges={[props.selectionRange]}
-                onChange={props.handleSelect}
+                onChange={props.handleDateSelect}
             />
             <button onClick={props.showState}>showState</button>
         </div>
