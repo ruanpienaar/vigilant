@@ -4,7 +4,7 @@ const VigilantAlertsList = (props) => (
     <ul>
     {
         props.alerts.map((alert) => (
-            <VigilantAlert key={alert} alert={alert} />
+            <VigilantAlert key={alert.generatorURL} alert={alert} />
         ))
     }
     </ul>

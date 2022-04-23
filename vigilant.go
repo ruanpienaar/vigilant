@@ -92,11 +92,9 @@ func main() {
 		for {
 			next := iter.Next()
 			if next == nil {
-				fmt.Println("Found next ")
 				break
-			} else {
-				fmt.Println(next)
 			}
+			fmt.Println(next)
 		}
 		//fmt.Println("Inside anonymous function")
 		return nil
@@ -116,6 +114,7 @@ func main() {
 		panic(err)
 	}
 
+	// TODO: json parsing, makes it fail, and get stuck
 	// nothing after this block - TODO: refactor all these blocks of logic :D
 	// web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +133,7 @@ func main() {
 				fmt.Println(v)
 				//aaa := &Alert{v.Labels["job"], v.Status}
 				// TODO: get job?
+				fmt.Println(v.StartsAt)
 				aRec := &Alert{v.GeneratorURL, "job", v.Status, v.StartsAt}
 				fmt.Println(aRec)
 				if err := txn.Insert("alert", aRec); err != nil {
@@ -183,6 +183,7 @@ func HandleURICommand(db *memdb.MemDB, RequestURI string) []byte {
 		if err != nil {
 			panic(err)
 		}
+
 		var responseJsonAlerts []AlertJson
 		for obj := it.Next(); obj != nil; obj = it.Next() {
 			DbAlert := obj.(*Alert)
@@ -192,6 +193,7 @@ func HandleURICommand(db *memdb.MemDB, RequestURI string) []byte {
 				Status:       DbAlert.Status,
 			})
 		}
+
 		responseJson := ListAlerts{
 			Alerts: responseJsonAlerts,
 		}
