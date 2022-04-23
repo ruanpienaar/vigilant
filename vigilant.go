@@ -23,6 +23,7 @@ type Alert struct {
 	Job          string
 	Status       string
 	StartsAt     time.Time
+	EndsAt       time.Time
 }
 
 // Json used for web api calls
@@ -61,11 +62,17 @@ func main() {
 						Unique:       false,
 						Indexer:      &memdb.StringFieldIndex{Field: "Status"},
 					},
-					"datetime": &memdb.IndexSchema{
-						Name:         "datetime",
+					"StartsAt": &memdb.IndexSchema{
+						Name:         "StartsAt",
 						AllowMissing: false,
 						Unique:       false,
-						Indexer:      &memdb.StringFieldIndex{Field: "Status"},
+						Indexer:      &memdb.StringFieldIndex{Field: "StartsAt"},
+					},
+					"EndsAt": &memdb.IndexSchema{
+						Name:         "EndsAt",
+						AllowMissing: false,
+						Unique:       false,
+						Indexer:      &memdb.StringFieldIndex{Field: "EndsAt"},
 					},
 				},
 			},
@@ -94,7 +101,7 @@ func main() {
 			if next == nil {
 				break
 			}
-			fmt.Println(next)
+			//fmt.Println(next)
 		}
 		//fmt.Println("Inside anonymous function")
 		return nil
@@ -118,6 +125,7 @@ func main() {
 	// nothing after this block - TODO: refactor all these blocks of logic :D
 	// web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
 		// POST - used for alert manager webhook.
 		if r.Method == "POST" {
 			fmt.Println("--- Handle POST ---")
@@ -134,7 +142,7 @@ func main() {
 				//aaa := &Alert{v.Labels["job"], v.Status}
 				// TODO: get job?
 				fmt.Println(v.StartsAt)
-				aRec := &Alert{v.GeneratorURL, "job", v.Status, v.StartsAt}
+				aRec := &Alert{v.GeneratorURL, "job", v.Status, v.StartsAt, v.EndsAt}
 				fmt.Println(aRec)
 				if err := txn.Insert("alert", aRec); err != nil {
 					panic(err)
@@ -148,15 +156,16 @@ func main() {
 			txn.Commit()
 			//}
 		} else {
+			// TODO: reverse this logic, check if the cmd exists first, if not file-serve.
 			filepath := "www/" + r.URL.Path[1:]
 			_, err := os.Open(filepath)
 			if errors.Is(err, fs.ErrNotExist) {
-				fmt.Println("handle command " + r.RequestURI)
-				commandResponse := HandleURICommand(db, r.RequestURI)
+				//fmt.Println("handle command " + r.RequestURI)
+				commandResponse := HandleURICommand(db, r.URL.Path, r.URL.Query)
 				// fmt.Fprintf(w, commandResponse)
 				w.Write(commandResponse)
 			} else {
-				fmt.Printf("serving file %s\n", filepath)
+				//fmt.Printf("serving file %s\n", filepath)
 				http.ServeFile(w, r, filepath)
 			}
 		}
@@ -167,24 +176,28 @@ func main() {
 
 func GetPostJson(bodyBytes []byte) template.Data {
 	alertJson := template.Data{}
-	err2 := json.Unmarshal([]byte(bodyBytes), &alertJson)
-	if err2 != nil {
-		fmt.Println(err2)
+	err := json.Unmarshal([]byte(bodyBytes), &alertJson)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
 	}
 	return alertJson
 }
 
-func HandleURICommand(db *memdb.MemDB, RequestURI string) []byte {
-	if RequestURI == "/api/list/all-alerts" {
-		fmt.Println("/api/list/all-alerts")
+func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) []byte {
+	// TODO: set application/json MIME response HEADER
+	if path == "/api/list/all-alerts" {
+		//fmt.Println("/api/list/all-alerts")
 		txn := db.Txn(false)
 		defer txn.Abort()
 		it, err := txn.Get("alert", "id")
 		if err != nil {
 			panic(err)
 		}
-
 		var responseJsonAlerts []AlertJson
+
+		//TODO: now get the args from qsMap, and tailor the query...
+
 		for obj := it.Next(); obj != nil; obj = it.Next() {
 			DbAlert := obj.(*Alert)
 			responseJsonAlerts = append(responseJsonAlerts, AlertJson{
@@ -193,7 +206,6 @@ func HandleURICommand(db *memdb.MemDB, RequestURI string) []byte {
 				Status:       DbAlert.Status,
 			})
 		}
-
 		responseJson := ListAlerts{
 			Alerts: responseJsonAlerts,
 		}
@@ -203,6 +215,7 @@ func HandleURICommand(db *memdb.MemDB, RequestURI string) []byte {
 		}
 		return b
 	} else {
+		//fmt.Printf("Unhandled URI Command %s\n", RequestURI)
 		b, err := syscall.ByteSliceFromString("null")
 		if err != nil {
 			panic(err)

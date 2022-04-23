@@ -16,64 +16,25 @@ export default class VigilantApp extends React.Component {
         // console.log(s); // native Date object
         console.log( 'startDate '+s.selection.startDate );
         console.log( 'endDate '+s.selection.endDate );
-
-        Axios.get(
-            'http://localhost:8801/api/list/all-alerts',
-            { params: {
+        const alerts = this.httpGetAlerts(s.selection.startDate, s.selection.endDate);
+        if (alerts != undefined || alerts != null) {
+            this.setState( () => ({
+                alerts,
                 startDate: s.selection.startDate,
                 endDate: s.selection.endDate
-            }}
-        )
-        .then(
-            (response) =>
-                {
-                    console.log(response);
-                    //console.log(response.data);
-                    //const jsonData = JSON.parse(response);
-                    //alerts = response.data.Alerts;
-                    // console.log('alerts:'+alerts);
-                    if (response.Alerts != undefined || response.Alerts != null) {
-                        this.setState( () => ( {
-                            alerts: response.Alerts,
-                            startDate: s.selection.startDate,
-                            endDate: s.selection.endDate
-                        } ));
-                    }
-               }
-        );
-        // this.setState( () => (
-        //     {
-        //         startDate: s.selection.startDate,
-        //         endDate: s.selection.endDate
-        //     }
-        // ) );
+            }) );
+        }
     }
     componentDidMount(){
-        // why were we doing this again ?
-        //this.setState( () => ( {alerts: []} ));
-
-        // TODO: how would we get the appropriate URL?
+        // TODO: how would we get the appropriate HOST?
         // .window methods might give you a public facing url, which is no good...
-        // for now hard-code, to allow local-dev to carry on.
-        // TODO: Add date params to URL below.
-
-        // TODO: read date from state, and add to URL below
-
-        Axios.get('http://localhost:8801/api/list/all-alerts').then(
-            (response) =>
-                {
-                    console.log(response.Alerts);
-                    //console.log(response.data);
-                    //const jsonData = JSON.parse(response);
-                    //alerts = response.Alerts;
-                    //console.log('alerts:'+alerts);
-                    let alertsResponse;
-                    if (response.Alerts != undefined || response.Alerts != null) {
-                        alertsResponse = response.Alerts;
-                        this.setState( () => ( {alerts: alertsResponse} ));
-                    }
-               }
-        );
+        // for now hard-code (localhost), to allow local-dev to carry on.
+        const alerts = this.httpGetAlerts(this.state.startDate, this.state.endDate);
+        if (alerts != undefined || alerts != null) {
+            this.setState( () => ({
+                alerts
+            }) );
+        }
     }
     render(){
         const selectionRange = {
@@ -98,6 +59,31 @@ export default class VigilantApp extends React.Component {
             </div>
         );
     }
+
+    httpGetAlerts(startDate, endDate){
+        Axios.get(
+            'http://localhost:8801/api/list/all-alerts',
+            { params: {
+                startDate: startDate,
+                endDate: endDate
+            }}
+        )
+        .then(
+            (response) =>
+                {
+                    console.log({
+                        action: 'check-alerts',
+                        alerts: response.Alerts
+                    });
+                    if (response.Alerts != undefined || response.Alerts != null) {
+                        return response.Alerts;
+                    } else {
+                        return [];
+                    }
+               }
+        );
+    }
+
 }
 
 //Axious.
