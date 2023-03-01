@@ -32,6 +32,7 @@ type AlertJson struct {
 	Job          string
 	Status       string
 	StartsAt     time.Time
+	EndsAt       time.Time
 }
 
 type ListAlerts struct {
@@ -39,6 +40,9 @@ type ListAlerts struct {
 }
 
 func main() {
+
+	fmt.Println("2022-04-19 22:40:51.245939463 +0000 UTC" > "2022-04-18 22:40:51.245939463 +0000 UTC")
+
 	schema := &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
 			"alert": &memdb.TableSchema{
@@ -128,7 +132,7 @@ func main() {
 
 		// POST - used for alert manager webhook.
 		if r.Method == "POST" {
-			fmt.Println("--- Handle POST ---")
+			//fmt.Println("--- Handle POST ---")
 			body, err := ioutil.ReadAll(r.Body)
 			defer r.Body.Close()
 			if err != nil {
@@ -138,12 +142,13 @@ func main() {
 			txn := db.Txn(true)
 			//if alertJson.Status == "firing" {
 			for _, v := range alertJson.Alerts {
-				fmt.Println(v)
+				//fmt.Println(v)
 				//aaa := &Alert{v.Labels["job"], v.Status}
 				// TODO: get job?
-				fmt.Println(v.StartsAt)
+				//fmt.Println(v.StartsAt)
+
 				aRec := &Alert{v.GeneratorURL, "job", v.Status, v.StartsAt, v.EndsAt}
-				fmt.Println(aRec)
+				//fmt.Println(aRec)
 				if err := txn.Insert("alert", aRec); err != nil {
 					panic(err)
 				}
@@ -161,7 +166,7 @@ func main() {
 			_, err := os.Open(filepath)
 			if errors.Is(err, fs.ErrNotExist) {
 				//fmt.Println("handle command " + r.RequestURI)
-				commandResponse := HandleURICommand(db, r.URL.Path, r.URL.Query)
+				commandResponse := HandleURICommand(db, r.URL.Path, r.URL.Query())
 				// fmt.Fprintf(w, commandResponse)
 				w.Write(commandResponse)
 			} else {
@@ -186,20 +191,28 @@ func GetPostJson(bodyBytes []byte) template.Data {
 
 func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) []byte {
 	// TODO: set application/json MIME response HEADER
+	fmt.Println(path)
 	if path == "/api/list/all-alerts" {
-		//fmt.Println("/api/list/all-alerts")
+
+		//TODO: now get the args from qsMap, and tailor the query...
+
 		txn := db.Txn(false)
 		defer txn.Abort()
-		it, err := txn.Get("alert", "id")
+		//it, err := txn.LowerBound("alert", "StartsAt", "2022-04-19 22:40:51.245939463 +0000 UTC")
+
+		// t, _ := time.Parse("2006-01-02", "2020-01-29")
+
+		// it, err := txn.ReverseLowerBound("alert", "StartsAt", t.String())
+		it, err := txn.LowerBound("alert", "StartsAt", "2022-04-19 22:40:51.245939463 +0000 UTC")
+
+		// it, err := txn.Get("alert", "id")
 		if err != nil {
 			panic(err)
 		}
 		var responseJsonAlerts []AlertJson
-
-		//TODO: now get the args from qsMap, and tailor the query...
-
 		for obj := it.Next(); obj != nil; obj = it.Next() {
 			DbAlert := obj.(*Alert)
+			fmt.Printf("date started %s\n", DbAlert.StartsAt)
 			responseJsonAlerts = append(responseJsonAlerts, AlertJson{
 				GeneratorURL: DbAlert.GeneratorURL,
 				Job:          DbAlert.Job,
@@ -209,8 +222,28 @@ func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) [
 		responseJson := ListAlerts{
 			Alerts: responseJsonAlerts,
 		}
+
 		b, jsonMarshalErr := json.Marshal(responseJson)
 		if jsonMarshalErr != nil {
+			panic(err)
+		}
+		return b
+
+	} else if path == "/api/list/print-alerts" {
+		read_txn := db.Txn(false)
+		iter, iterErr := read_txn.Get("alert", "job")
+		if iterErr != nil {
+			panic(iterErr)
+		}
+		for {
+			next := iter.Next()
+			if next == nil {
+				break
+			}
+			fmt.Println(next)
+		}
+		b, err := syscall.ByteSliceFromString("null")
+		if err != nil {
 			panic(err)
 		}
 		return b
