@@ -27,7 +27,8 @@ type Alert struct {
 }
 
 // Json used for web api calls
-type AlertJson struct {
+
+type alertJSON struct {
 	GeneratorURL string
 	Job          string
 	Status       string
@@ -35,8 +36,8 @@ type AlertJson struct {
 	EndsAt       time.Time
 }
 
-type ListAlerts struct {
-	Alerts []AlertJson
+type listAlerts struct {
+	Alerts []alertJSON
 }
 
 func main() {
@@ -95,8 +96,8 @@ func main() {
 	// used for periodically checking expired alerts, and deleting
 	taskFunc := func() error {
 		//fmt.Println(db)
-		read_txn := db.Txn(false)
-		iter, iterErr := read_txn.Get("alert", "job")
+		ReadTxn := db.Txn(false)
+		iter, iterErr := ReadTxn.Get("alert", "job")
 		if iterErr != nil {
 			panic(iterErr)
 		}
@@ -111,7 +112,7 @@ func main() {
 		return nil
 	}
 
-	// re-occurring task to cleanup
+	// re-occurring task to clean up
 	id, err := scheduler.Add(
 		&tasks.Task{
 			Interval: time.Duration(1 * time.Minute),
@@ -138,7 +139,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			alertJson := GetPostJson(body)
+			alertJSON := getPostJSON(body)
 			txn := db.Txn(true)
 			//if alertJson.Status == "firing" {
 			for _, v := range alertJson.Alerts {
@@ -179,17 +180,17 @@ func main() {
 
 } // -end of main
 
-func GetPostJson(bodyBytes []byte) template.Data {
-	alertJson := template.Data{}
-	err := json.Unmarshal([]byte(bodyBytes), &alertJson)
+func getPostJSON(bodyBytes []byte) template.Data {
+	alertJSON := template.Data{}
+	err := json.Unmarshal([]byte(bodyBytes), &alertJSON)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	return alertJson
+	return alertJSON
 }
 
-func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) []byte {
+func handleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) []byte {
 	// TODO: set application/json MIME response HEADER
 	fmt.Println(path)
 	if path == "/api/list/all-alerts" {
@@ -219,14 +220,14 @@ func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) [
 				Status:       DbAlert.Status,
 			})
 		}
-		responseJson := ListAlerts{
-			Alerts: responseJsonAlerts,
+		responseJSON := listAlerts{
+			Alerts: responseJSONAlerts,
 		}
-
-		b, jsonMarshalErr := json.Marshal(responseJson)
+		b, jsonMarshalErr := json.Marshal(responseJSON)
 		if jsonMarshalErr != nil {
 			panic(err)
 		}
+		// log.Println(b)
 		return b
 
 	} else if path == "/api/list/print-alerts" {
@@ -249,7 +250,7 @@ func HandleURICommand(db *memdb.MemDB, path string, qsMap map[string][]string) [
 		return b
 	} else {
 		//fmt.Printf("Unhandled URI Command %s\n", RequestURI)
-		b, err := syscall.ByteSliceFromString("null")
+		b, err := syscall.ByteSliceFromString("undefined")
 		if err != nil {
 			panic(err)
 		}
